@@ -1,4 +1,4 @@
-package com.argentum;
+package com.argentum.utils.time;
 
 public class TickTimer {
     private int passed = 0;

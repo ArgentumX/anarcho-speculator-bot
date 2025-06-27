@@ -1,5 +1,6 @@
-package com.argentum;
+package com.argentum.utils.items;
 
+import com.argentum.logger.ModLogger;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
@@ -15,7 +16,6 @@ import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 
 public class ItemFilter {
-    private static final Logger LOGGER = LogManager.getLogger("ItemFilter");
     private final Item item;
     private final int minDurabilityPercent;
     private final int maxPrice;
@@ -32,16 +32,16 @@ public class ItemFilter {
             return false;
         }
         if (!isValidDurability(stack)) {
-            LOGGER.info("Durability too low: {}", stack.getName().getString());
+            ModLogger.info("Durability too low: {}", stack.getName().getString());
             return false;
         }
 
         if (!isValidPrice(stack)){
-            LOGGER.info("Item too expensive: {}", stack.getName().getString());
+            ModLogger.info("Item too expensive: {}", stack.getName().getString());
             return false;
         }
 
-        LOGGER.info("Item passed all checks: {}", stack.getName().getString());
+        ModLogger.info("Item passed all checks: {}", stack.getName().getString());
         return true;
     }
 
@@ -65,20 +65,20 @@ public class ItemFilter {
             return false;
         }
 
-        LOGGER.info("Detected price: {}", price);
+        ModLogger.info("Detected price: {}", price);
         return price <= maxPrice;
     }
 
     private List<String> extractLore(ItemStack stack) {
         List<String> loreEntries = new ArrayList<>();
         if (!stack.hasNbt() || !stack.getNbt().contains("display", NbtElement.COMPOUND_TYPE)) {
-            LOGGER.warn("No NBT or display tag found for item: {}", stack.getName().getString());
+            ModLogger.warn("No NBT or display tag found for item: {}", stack.getName().getString());
             return loreEntries;
         }
 
         NbtCompound displayNbt = stack.getNbt().getCompound("display");
         if (!displayNbt.contains("Lore", NbtElement.LIST_TYPE)) {
-            LOGGER.warn("No lore found for item: {}", stack.getName().getString());
+            ModLogger.warn("No lore found for item: {}", stack.getName().getString());
             return loreEntries;
         }
 
@@ -101,7 +101,7 @@ public class ItemFilter {
                 return Integer.parseInt(priceString);
             }
         }
-        LOGGER.info("No price found in lore for item: {}", stack.getName());
+        ModLogger.info("No price found in lore for item: {}", stack.getName());
         return -1;
     }
 }
