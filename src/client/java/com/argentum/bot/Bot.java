@@ -2,30 +2,22 @@ package com.argentum.bot;
 
 import com.argentum.config.Config;
 import com.argentum.logger.ModLogger;
-import com.argentum.utils.items.ItemFilter;
+import com.argentum.utils.items.filters.ItemFilter;
 import com.argentum.utils.time.TickTimer;
-import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.ingame.GenericContainerScreen;
 import net.minecraft.inventory.Inventory;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.registry.Registries;
 import net.minecraft.screen.GenericContainerScreenHandler;
 import net.minecraft.screen.slot.SlotActionType;
-import net.minecraft.util.Identifier;
 
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Queue;
-import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 public class Bot {
-    private final Set<ItemFilter> itemFilters = new HashSet<>();
     private final Queue<Integer> clickQueue = new LinkedList<>();
     private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
     private final TickTimer timer = new TickTimer();
@@ -36,22 +28,6 @@ public class Bot {
     private boolean isProcessingQueue = false;
 
     private int tickCounter = 0;
-    private static final Item CONFIRM_ITEM = Items.LIME_STAINED_GLASS_PANE;
-    private static final int CONFIRM_TICK_TIMEOUT = 40;
-    private static final long CLICK_DELAY_MS = 200;
-
-    public Bot() {
-        itemFilters.add(new ItemFilter(
-                Registries.ITEM.get(new Identifier("minecraft", "diamond_sword")),
-                70,
-                150000000
-        ));
-        itemFilters.add(new ItemFilter(
-                Registries.ITEM.get(new Identifier("minecraft", "diamond_pickaxe")),
-                50,
-                150000000
-        ));
-    }
 
     public void onTick(MinecraftClient client) {
         if (client.player == null) return;
@@ -96,7 +72,7 @@ public class Bot {
         }
 
         tickCounter++;
-        if (tickCounter >= CONFIRM_TICK_TIMEOUT) {
+        if (tickCounter >= Config.CONFIRM_TICK_TIMEOUT) {
             awaitingConfirmation = false;
             tickCounter = 0;
             ModLogger.info("Failed to find confirm button in time.");
@@ -106,7 +82,7 @@ public class Bot {
 
     private void processClickQueue() {
         isProcessingQueue = true;
-        scheduleNextClick(CLICK_DELAY_MS);
+        scheduleNextClick(Config.CLICK_DELAY_MS);
     }
 
     private void scheduleNextClick(long delay) {
@@ -139,7 +115,7 @@ public class Bot {
 
         for (int i = 0; i < chestInventory.size(); i++) {
             ItemStack stack = chestInventory.getStack(i);
-            if (!stack.isEmpty() && stack.getItem() == CONFIRM_ITEM) {
+            if (!stack.isEmpty() && stack.getItem() == Config.CONFIRM_ITEM) {
                 clickQueue.clear();
                 clickQueue.offer(i);
                 processClickQueue();
@@ -164,7 +140,7 @@ public class Bot {
 
             if (stack.isEmpty()) continue;
 
-            for (ItemFilter filter : itemFilters) {
+            for (ItemFilter filter : Config.itemFilters) {
                 if (filter.isValid(stack)) {
                     ModLogger.info("Found valid item: {}", stack.getName().getString());
                     clickQueue.offer(slotIndex);

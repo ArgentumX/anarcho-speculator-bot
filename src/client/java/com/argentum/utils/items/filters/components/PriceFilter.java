@@ -1,71 +1,34 @@
-package com.argentum.utils.items;
+package com.argentum.utils.items.filters.components;
 
 import com.argentum.logger.ModLogger;
-import net.minecraft.item.Item;
+import com.argentum.utils.items.filters.IFilter;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtList;
 import net.minecraft.nbt.NbtElement;
+import net.minecraft.nbt.NbtList;
 import net.minecraft.text.Text;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.regex.Pattern;
 import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
-public class ItemFilter {
-    private final Item item;
-    private final int minDurabilityPercent;
+public class PriceFilter implements IFilter<ItemStack> {
     private final int maxPrice;
-    private final Pattern pricePattern =  Pattern.compile("\\$ *Цен[аa] *\\$ *(\\d{1,3}(?:,\\d{3})*)");
+    private final Pattern pricePattern = Pattern.compile("\\$ *Цен[аa] *\\$ *(\\d{1,3}(?:,\\d{3})*)");
 
-    public ItemFilter(Item item, int minDurabilityPercent, int maxPrice) {
-        this.item = item;
-        this.minDurabilityPercent = minDurabilityPercent;
+    public PriceFilter(int maxPrice) {
         this.maxPrice = maxPrice;
     }
 
+    @Override
     public boolean isValid(ItemStack stack) {
-        if (!isValidType(stack)) {
-            return false;
-        }
-        if (!isValidDurability(stack)) {
-            ModLogger.info("Durability too low: {}", stack.getName().getString());
-            return false;
-        }
-
-        if (!isValidPrice(stack)){
-            ModLogger.info("Item too expensive: {}", stack.getName().getString());
-            return false;
-        }
-
-        ModLogger.info("Item passed all checks: {}", stack.getName().getString());
-        return true;
-    }
-
-    public boolean isValidType(ItemStack stack){
-        return stack.getItem() == item;
-    }
-
-    public boolean isValidDurability(ItemStack stack){
-        if (stack.isDamageable()) {
-            int maxDamage = stack.getMaxDamage();
-            int currentDamage = stack.getDamage();
-            int durabilityPercent = ((maxDamage - currentDamage) * 100) / maxDamage;
-            return durabilityPercent >= minDurabilityPercent;
-        }
-        return true;
-    }
-
-    public boolean isValidPrice(ItemStack stack){
         int price = extractPrice(stack);
         if (price == -1) {
             return false;
         }
 
-        ModLogger.info("Detected price: {}", price);
+        ModLogger.debug("Detected price: {}", price);
         return price <= maxPrice;
     }
 
@@ -86,8 +49,9 @@ public class ItemFilter {
         for (int i = 0; i < loreList.size(); i++) {
             String loreEntry = loreList.getString(i);
             Text text = Text.Serializer.fromJson(loreEntry);
-            assert text != null;
-            loreEntries.add(text.getString().trim());
+            if (text != null) {
+                loreEntries.add(text.getString().trim());
+            }
         }
         return loreEntries;
     }
@@ -101,7 +65,7 @@ public class ItemFilter {
                 return Integer.parseInt(priceString);
             }
         }
-        ModLogger.info("No price found in lore for item: {}", stack.getName());
+        ModLogger.debug("No price found in lore for item: {}", stack.getName());
         return -1;
     }
 }
