@@ -1,5 +1,6 @@
 package com.argentum.bot;
 
+import com.argentum.config.Config;
 import com.argentum.logger.ModLogger;
 import com.argentum.utils.items.ItemFilter;
 import com.argentum.utils.time.TickTimer;
@@ -58,6 +59,8 @@ public class Bot {
             timer.handleTick();
             return;
         }
+
+        if (!Config.buyerMode) return;
 
         boolean chestScreenOpen = client.currentScreen instanceof GenericContainerScreen;
 
